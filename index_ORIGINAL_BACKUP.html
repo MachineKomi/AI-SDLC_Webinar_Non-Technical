@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vesta AI-SDLC (30 min)</title>
+  <style>
+    :root{
+      --bg0:#070A12;
+      --bg1:#0B1020;
+      --card:#111A33;
+      --card2:#0E1630;
+      --text:#EAF0FF;
+      --muted:#A9B3D6;
+      --faint:rgba(234,240,255,.08);
+      --accent:#6EE7FF;
+      --accent2:#A78BFA;
+      --danger:#FB7185;
+      --ok:#34D399;
+      --warn:#FBBF24;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius2: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; font-family:var(--sans); color:var(--text); background: radial-gradient(1000px 700px at 20% 10%, rgba(167,139,250,.22), transparent 60%), radial-gradient(900px 650px at 80% 35%, rgba(110,231,255,.18), transparent 60%), linear-gradient(180deg, var(--bg0), var(--bg1));}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    button{font:inherit}
+
+    /* Stage */
+    .deck{position:fixed; inset:0; overflow:hidden;}
+    .slide{position:absolute; inset:0; padding:56px 64px 84px; display:grid; grid-template-rows:auto 1fr; gap:22px; opacity:0; transform:translateX(24px); transition: opacity .28s ease, transform .28s ease; pointer-events:none;}
+    .slide.active{opacity:1; transform:translateX(0); pointer-events:auto;}
+    .slide.to-left{opacity:0; transform:translateX(-24px);} /* when moving forward */
+    .slide.to-right{opacity:0; transform:translateX(24px);} /* when moving back */
+
+    /* Top bar */
+    .topbar{display:flex; align-items:flex-start; justify-content:space-between; gap:16px;}
+    .kicker{display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid var(--faint); border-radius:999px; background:rgba(255,255,255,.03); color:var(--muted); font-size:14px;}
+    .kdot{width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 0 0 4px rgba(110,231,255,.12);}
+    .title{font-size:46px; line-height:1.05; letter-spacing:-.02em; margin:0 0 8px;}
+    .subtitle{color:var(--muted); font-size:18px; margin:0; max-width:1000px;}
+
+    /* Layout blocks */
+    .grid2{display:grid; grid-template-columns: 1.05fr .95fr; gap:22px; align-content:start;}
+    .grid3{display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; align-content:start;}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid var(--faint); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 18px;}
+    .card.tight{padding:14px 16px}
+    .card h3{margin:0 0 10px; font-size:18px; letter-spacing:-.01em}
+    .card p{margin:0; color:var(--muted); font-size:16px; line-height:1.45}
+    .muted{color:var(--muted)}
+    .small{font-size:13px; color:var(--muted)}
+    .mono{font-family:var(--mono)}
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px;}
+    .pill{display:inline-flex; align-items:center; gap:10px; padding:10px 12px; border-radius:999px; background:rgba(110,231,255,.08); border:1px solid rgba(110,231,255,.18); color:var(--text); font-size:14px;}
+    .pill .tag{color:var(--muted)}
+    .pill .dot{width:10px; height:10px; border-radius:50%}
+
+    /* Lists */
+    ul{margin:10px 0 0; padding-left:20px;}
+    li{margin:8px 0; color:var(--text); font-size:18px; line-height:1.25}
+    li span{color:var(--muted)}
+    .checklist{list-style:none; padding-left:0; margin:0;}
+    .checklist li{padding-left:28px; position:relative; font-size:17px; color:var(--text)}
+    .checklist li::before{content:""; position:absolute; left:0; top:5px; width:16px; height:16px; border-radius:5px; border:1px solid rgba(110,231,255,.35); background:rgba(110,231,255,.08);}
+
+    /* Code block */
+    pre{margin:0; padding:14px 14px; border-radius:var(--radius2); background:rgba(0,0,0,.25); border:1px solid var(--faint); overflow:auto;}
+    code{font-family:var(--mono); font-size:13px; color:rgba(234,240,255,.95)}
+
+    /* Fragments */
+    .fragment{opacity:0; transform: translateY(10px); filter: blur(.1px); transition: opacity .24s ease, transform .24s ease; pointer-events:none;}
+    .fragment.shown{opacity:1; transform: translateY(0); pointer-events:auto;}
+
+    /* Footer controls */
+    .footer{position:fixed; left:0; right:0; bottom:0; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:linear-gradient(180deg, transparent, rgba(0,0,0,.45));}
+    .progressWrap{flex:1; display:flex; align-items:center; gap:12px;}
+    .progressBar{height:8px; flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:999px; overflow:hidden;}
+    .progressBar > div{height:100%; width:0; background:linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:999px; transition: width .25s ease;}
+    .slideCount{font-size:13px; color:var(--muted); min-width:86px; text-align:right}
+    .controls{display:flex; align-items:center; gap:10px;}
+    .btn{cursor:pointer; border-radius:12px; padding:10px 12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.06); color:var(--text); min-width:104px; display:inline-flex; align-items:center; justify-content:center; gap:10px; user-select:none;}
+    .btn:hover{background:rgba(255,255,255,.09)}
+    .btn.primary{border-color:rgba(110,231,255,.30); background:rgba(110,231,255,.10)}
+    .btn.primary:hover{background:rgba(110,231,255,.14)}
+    .btn:active{transform: translateY(1px)}
+    .kbd{font-family:var(--mono); font-size:12px; color:var(--muted); border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.25); border-radius:10px; padding:6px 10px;}
+
+    /* HUD */
+    .hud{position:fixed; top:14px; right:18px; display:flex; flex-direction:column; gap:10px; align-items:flex-end; pointer-events:none;}
+    .hud .panel{pointer-events:auto; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:12px;}
+    .hud .panel strong{font-size:14px}
+    .hud .panel span{font-size:13px; color:var(--muted)}
+    .hud.hidden{display:none}
+    .hud .tinybtn{pointer-events:auto; cursor:pointer; border:1px solid rgba(255,255,255,.15); border-radius:12px; background:rgba(255,255,255,.06); color:var(--text); padding:8px 10px; font-size:13px; user-select:none;}
+    .hud .tinybtn:hover{background:rgba(255,255,255,.09)}
+
+    /* Stepper */
+    .stepper{display:grid; grid-template-columns: 1fr; gap:12px;}
+    .steps{display:flex; gap:10px; flex-wrap:wrap}
+    .step{cursor:pointer; user-select:none; padding:10px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--text); font-size:14px;}
+    .step.active{border-color:rgba(110,231,255,.32); background:rgba(110,231,255,.12)}
+    .step-detail{display:none;}
+    .step-detail.active{display:block;}
+    .step-detail ul{margin-top:8px}
+
+    /* Flow rows */
+    .flow{display:flex; flex-wrap:wrap; align-items:center; gap:10px;}
+    .node{padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); min-width:180px;}
+    .node strong{display:block; font-size:15px; margin-bottom:4px}
+    .node span{color:var(--muted); font-size:13px}
+    .arrow{width:28px; height:28px; display:grid; place-items:center; color:rgba(234,240,255,.85);}
+    .arrow svg{width:22px; height:22px; opacity:.9}
+
+    /* Gatekeeper */
+    .gate{display:grid; grid-template-columns: 1fr; gap:12px;}
+    .gate .scenario{padding:14px; border-radius:var(--radius2); border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.22)}
+    .choices{display:flex; gap:10px; flex-wrap:wrap}
+    .choice{cursor:pointer; user-select:none; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05);}
+    .choice[data-v="approve"]{border-color:rgba(52,211,153,.28);}
+    .choice[data-v="reject"]{border-color:rgba(251,113,133,.28);}
+    .choice.active[data-v="approve"]{background:rgba(52,211,153,.12)}
+    .choice.active[data-v="reject"]{background:rgba(251,113,133,.12)}
+    .reveal{display:none; padding:14px; border-radius:var(--radius2); border:1px solid rgba(110,231,255,.25); background:rgba(110,231,255,.08)}
+    .reveal.show{display:block}
+
+    /* Thumbs */
+    .thumbs{display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;}
+    .thumb{border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); padding:12px; display:grid; gap:8px; align-content:start}
+    .thumb .t{font-size:13px; color:var(--muted)}
+
+    /* Big quote */
+    .quote{font-size:28px; line-height:1.2; letter-spacing:-.02em; margin:0;}
+    .quote strong{color:var(--accent)}
+
+    /* Responsiveness */
+    @media (max-width: 1100px){
+      .slide{padding:48px 44px 92px}
+      .title{font-size:40px}
+      .grid2{grid-template-columns:1fr}
+      .thumbs{grid-template-columns: repeat(2, 1fr)}
+    }
+    @media (max-width: 720px){
+      .slide{padding:40px 18px 100px}
+      .title{font-size:32px}
+      li{font-size:16px}
+      .btn{min-width:84px}
+      .slideCount{min-width:auto}
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck" aria-live="polite">
+
+    <!-- 1 -->
+    <section class="slide active" data-title="AI-SDLC at Vesta">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Vesta AI-SDLC (30 min) - remote session</div>
+          <h1 class="title">AI-SDLC: ship faster without trading off quality</h1>
+          <p class="subtitle">Plan-first, small batches, proof-backed outcomes. What it is, why it matters, and how BUs adopt it into BAU.</p>
+        </div>
+        <div class="card tight" style="max-width:360px">
+          <h3 style="margin:0 0 8px">Navigation</h3>
+          <p class="small" style="margin:0 0 10px">Use arrow keys or the buttons. Each slide may have progressive reveals.</p>
+          <div class="pillrow">
+            <div class="pill"><span class="dot" style="background:var(--accent)"></span><span class="tag">Next:</span> Right / Space</div>
+            <div class="pill"><span class="dot" style="background:var(--accent2)"></span><span class="tag">Prev:</span> Left</div>
+            <div class="pill"><span class="dot" style="background:var(--warn)"></span><span class="tag">HUD:</span> H</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2" style="align-content:start">
+        <div class="card">
+          <h3>What you will get</h3>
+          <ul>
+            <li><strong>Why</strong> AI-SDLC is now an operating-model problem (not a tooling problem)</li>
+            <li><strong>How</strong> Vesta AI-SDLC works: lifecycle, gates, artifacts, and rails</li>
+            <li><strong>Adoption</strong> path: Gym - scale - BAU, plus workshops + resources</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>One-line definition</h3>
+          <p class="quote"><strong>AI proposes and executes</strong> within explicit bounds, <strong>humans approve and verify</strong>, and the work leaves behind durable artifacts and evidence.</p>
+          <div style="height:12px"></div>
+          <div class="pillrow">
+            <div class="pill"><span class="dot" style="background:var(--ok)"></span> human accountability</div>
+            <div class="pill"><span class="dot" style="background:var(--warn)"></span> plan-first</div>
+            <div class="pill"><span class="dot" style="background:var(--accent)"></span> proof over prose</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide" data-title="Why AI-SDLC exists">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Context</div>
+          <h2 class="title" style="font-size:44px">Coding got faster. Delivery did not.</h2>
+          <p class="subtitle">AI makes implementation cheaper, so the bottleneck shifts to alignment, review, verification, and operational safety.</p>
+        </div>
+        <div class="card tight" style="max-width:360px">
+          <h3 style="margin:0 0 8px">Presenter prompt</h3>
+          <p class="small" style="margin:0">Ask: "Where do we lose most time after code is written?" Then reveal the flow.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flow" aria-label="delivery flow">
+          <div class="node fragment"><strong>Intent</strong><span>what and why</span></div>
+          <div class="arrow fragment" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="node fragment"><strong>Alignment</strong><span>requirements, constraints</span></div>
+          <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="node fragment"><strong>Build</strong><span>code and tests</span></div>
+          <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="node fragment"><strong>Verify</strong><span>tests, scans, review</span></div>
+          <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="node fragment"><strong>Operate</strong><span>runbooks, monitoring</span></div>
+        </div>
+
+        <div style="height:16px"></div>
+        <div class="grid3">
+          <div class="card2 card fragment">
+            <h3>Failure mode</h3>
+            <p>Teams adopt tools, but keep the same rituals and handoffs. Output goes up, confidence goes down.</p>
+          </div>
+          <div class="card2 card fragment">
+            <h3>What changes</h3>
+            <p>We redesign the unit of work, the gates, and the feedback loops so higher throughput stays safe.</p>
+          </div>
+          <div class="card2 card fragment">
+            <h3>What stays</h3>
+            <p>Accountability and good engineering practices. AI is a collaborator, not an excuse.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide" data-title="The hidden killer: entropy">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Problem statement</div>
+          <h2 class="title" style="font-size:44px">Mature systems fail through slow entropy</h2>
+          <p class="subtitle">Most architectural and performance regressions come from reasonable local changes that add up over time.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Interactive</h3>
+          <p class="small" style="margin:0">Click an example. Then ask: "Would code review catch this reliably?"</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Entropy examples (click to reveal the hidden cost)</h3>
+          <div class="thumbs" id="entropyGrid">
+            <div class="thumb" data-example="listeners">
+              <div class="kicker" style="justify-content:flex-start"><span class="kdot"></span> Abstraction hides cost</div>
+              <div class="t">A reusable UI hook adds a global click listener per instance.</div>
+            </div>
+            <div class="thumb" data-example="cache">
+              <div class="kicker" style="justify-content:flex-start"><span class="kdot"></span> Silent cache break</div>
+              <div class="t">An object parameter changes cache keys so it never hits.</div>
+            </div>
+            <div class="thumb" data-example="async">
+              <div class="kicker" style="justify-content:flex-start"><span class="kdot"></span> Async waterfall</div>
+              <div class="t">A single await turns parallel work into sequential latency.</div>
+            </div>
+            <div class="thumb" data-example="opt">
+              <div class="kicker" style="justify-content:flex-start"><span class="kdot"></span> Optimization without proof</div>
+              <div class="t">Memoization adds overhead and makes it slower.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" aria-live="polite">
+          <h3>What AI-SDLC does differently</h3>
+          <ul>
+            <li class="fragment"><strong>Just-in-time guidance</strong> <span>- AI flags the risk and shows the fix in the workflow.</span></li>
+            <li class="fragment"><strong>Repo-wide context</strong> <span>- check diffs against patterns, conventions, and past failures.</span></li>
+            <li class="fragment"><strong>No fatigue</strong> <span>- consistent rule application across thousands of changes.</span></li>
+            <li class="fragment"><strong>Humans still own judgment</strong> <span>- trade-offs, intent, and "good enough".</span></li>
+          </ul>
+
+          <div class="card tight" id="entropyDetail" style="margin-top:14px; border-color:rgba(110,231,255,.22)">
+            <h3 style="margin:0 0 8px">Selected example</h3>
+            <p class="muted" id="entropyText" style="margin:0">Click an example on the left.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" data-title="What AI-SDLC is (and isn't)">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Definition</div>
+          <h2 class="title" style="font-size:44px">AI-SDLC is a method, not a tool rollout</h2>
+          <p class="subtitle">A repeatable loop: plan - approve - execute - verify, with durable artifacts and explicit safety stops.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Key phrase</h3>
+          <p class="quote" style="font-size:22px; margin:0"><strong>Human accountability is the loss function.</strong></p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>The loop</h3>
+          <div class="flow" style="gap:12px">
+            <div class="node fragment"><strong>AI drafts a plan</strong><span>asks what it is missing</span></div>
+            <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="node fragment"><strong>Humans validate</strong><span>scope, risks, constraints</span></div>
+            <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="node fragment"><strong>AI executes</strong><span>small diffs, tests, docs</span></div>
+            <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="node fragment"><strong>Humans verify</strong><span>evidence + merge</span></div>
+          </div>
+          <div style="height:14px"></div>
+          <div class="pillrow fragment">
+            <div class="pill"><span class="dot" style="background:var(--accent)"></span> evidence required</div>
+            <div class="pill"><span class="dot" style="background:var(--accent2)"></span> artifacts in-repo</div>
+            <div class="pill"><span class="dot" style="background:var(--warn)"></span> adaptive depth</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>What it is not</h3>
+          <ul>
+            <li class="fragment"><strong>"Install Copilot"</strong> <span>and keep the same process.</span></li>
+            <li class="fragment"><strong>"Prompt-to-production"</strong> <span>without gates, design, and verification.</span></li>
+            <li class="fragment"><strong>"AI owns outcomes"</strong> <span>or replaces engineering accountability.</span></li>
+          </ul>
+          <div style="height:16px"></div>
+          <div class="card tight fragment" style="border-color:rgba(251,191,36,.25); background:rgba(251,191,36,.07)">
+            <h3 style="margin:0 0 8px">Rule of thumb</h3>
+            <p class="muted" style="margin:0">If you cannot explain and defend what shipped, AI-SDLC was not followed.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide" data-title="Why it matters to Vesta">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Vesta AI-First strategy</div>
+          <h2 class="title" style="font-size:44px">AI-SDLC is a core element of AI-First</h2>
+          <p class="subtitle">The strategy explicitly calls for AI-SDLC in at least one product per BU, and ties progress to ratio outcomes and a portfolio KPI.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Strategy snippet (paraphrased)</h3>
+          <p class="small" style="margin:0">"R&amp;D &amp; Product: AI-SDLC in at least one product" + baseline expectations within ~90 days of kickoff.</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Operating model</h3>
+          <ul>
+            <li class="fragment"><strong>BU-led, central-enabled</strong> <span>- teams own outcomes; central provides kits, coaching, and patterns.</span></li>
+            <li class="fragment"><strong>Outcome mandated, tool agnostic</strong> <span>- pick tools that fit, but keep the method and gates.</span></li>
+            <li class="fragment"><strong>Measured</strong> <span>- portfolio tracking via the Jonas North Star AI KPI and ratio movement.</span></li>
+          </ul>
+          <div style="height:14px"></div>
+          <div class="pillrow fragment">
+            <div class="pill"><span class="dot" style="background:var(--ok)"></span> faster delivery</div>
+            <div class="pill"><span class="dot" style="background:var(--accent)"></span> lower rework</div>
+            <div class="pill"><span class="dot" style="background:var(--accent2)"></span> safer change</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Why leadership cares</h3>
+          <div class="grid3" style="grid-template-columns:1fr; gap:12px">
+            <div class="card tight fragment" style="background:rgba(110,231,255,.06); border-color:rgba(110,231,255,.18)">
+              <h3 style="margin:0 0 8px">Throughput at stable headcount</h3>
+              <p class="small" style="margin:0">AI-SDLC aims to increase validated output (not just code output).</p>
+            </div>
+            <div class="card tight fragment" style="background:rgba(167,139,250,.06); border-color:rgba(167,139,250,.18)">
+              <h3 style="margin:0 0 8px">Modernize faster</h3>
+              <p class="small" style="margin:0">Discovery + artifacts + rails reduce risk in brownfield and modernization work.</p>
+            </div>
+            <div class="card tight fragment" style="background:rgba(52,211,153,.06); border-color:rgba(52,211,153,.18)">
+              <h3 style="margin:0 0 8px">Governance at scale</h3>
+              <p class="small" style="margin:0">Persisted artifacts and evidence make AI use auditable and repeatable.</p>
+            </div>
+          </div>
+          <div style="height:10px"></div>
+          <p class="small muted">Note: strategy effective date (doc): 1 Jan 2026. Playbook last updated: 30 Jan 2026.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide" data-title="Lifecycle + gates">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> The lifecycle</div>
+          <h2 class="title" style="font-size:44px">Three phases, explicit gates</h2>
+          <p class="subtitle">AI-SDLC is adaptive, but it never skips: requirements clarity, plan approval, and validation evidence.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Interactive</h3>
+          <p class="small" style="margin:0">Click phases to show mandatory outputs. Use this as shared language across technical and non-technical roles.</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Lifecycle map</h3>
+          <div class="stepper" data-stepper>
+            <div class="steps">
+              <div class="step active" data-step="inception">Phase A: Inception</div>
+              <div class="step" data-step="construction">Phase B: Construction</div>
+              <div class="step" data-step="operations">Phase C: Operations</div>
+            </div>
+            <div class="step-detail active" data-step-detail="inception">
+              <p class="muted" style="margin:0">Goal: convert intent into testable, decomposed work.</p>
+              <ul>
+                <li><strong>Intent</strong> + success metrics</li>
+                <li>Requirements + constraints</li>
+                <li>NFRs (security, performance, availability)</li>
+                <li>Units of work + acceptance criteria</li>
+                <li>Level-1 execution plan</li>
+              </ul>
+              <div class="pillrow" style="margin-top:10px">
+                <div class="pill"><span class="dot" style="background:var(--warn)"></span> Gate: Inception approved</div>
+              </div>
+            </div>
+            <div class="step-detail" data-step-detail="construction">
+              <p class="muted" style="margin:0">Goal: build each unit with proof, in small diffs.</p>
+              <ul>
+                <li>Per-unit plan and (right-sized) design</li>
+                <li>Implement small diffs</li>
+                <li>Verification: tests, lint, build, scans</li>
+                <li>Validation report: what ran and results</li>
+              </ul>
+              <div class="pillrow" style="margin-top:10px">
+                <div class="pill"><span class="dot" style="background:var(--accent)"></span> Gate: Unit done (evidence + review)</div>
+              </div>
+            </div>
+            <div class="step-detail" data-step-detail="operations">
+              <p class="muted" style="margin:0">Goal: deployable, observable, rollbackable.</p>
+              <ul>
+                <li>Deployment plan + rollout strategy</li>
+                <li>Runbooks + observability (dashboards/alerts)</li>
+                <li>Cost review and controls</li>
+                <li>Security evidence</li>
+              </ul>
+              <div class="pillrow" style="margin-top:10px">
+                <div class="pill"><span class="dot" style="background:var(--ok)"></span> Gate: Production readiness</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Four lenses (so it works across roles)</h3>
+          <ul>
+            <li class="fragment"><strong>Engineering</strong> <span>- stabilize a high-gain actuator with tight feedback loops.</span></li>
+            <li class="fragment"><strong>DevSecOps</strong> <span>- treat outputs as untrusted until proven by checks and runtime evidence.</span></li>
+            <li class="fragment"><strong>Product</strong> <span>- intent clarity is context compression; vagueness causes rework at machine speed.</span></li>
+            <li class="fragment"><strong>Change leadership</strong> <span>- adoption is a cultural refactor: new rituals, roles, and practice.</span></li>
+          </ul>
+          <div style="height:10px"></div>
+          <div class="card tight fragment" style="background:rgba(251,113,133,.06); border-color:rgba(251,113,133,.18)">
+            <h3 style="margin:0 0 8px">Anti-pattern to avoid</h3>
+            <p class="small" style="margin:0">"Big low-confidence code dump" + humans forced to review and own a diff they do not understand.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide" data-title="Non-negotiables">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Safety and scalability</div>
+          <h2 class="title" style="font-size:44px">The non-negotiables</h2>
+          <p class="subtitle">These rules make AI use safe, reviewable, and repeatable at BU scale.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Presenter tip</h3>
+          <p class="small" style="margin:0">Keep returning to three anchors: plan-first, small batches, proof over prose.</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Rules (progressively reveal)</h3>
+          <ul>
+            <li class="fragment"><strong>Human accountability</strong> <span>- humans own decisions and outcomes.</span></li>
+            <li class="fragment"><strong>Plan-first, stage-by-stage</strong> <span>- stop for approval before executing meaningful work.</span></li>
+            <li class="fragment"><strong>Small batches (units)</strong> <span>- keep diffs reviewable and reversible.</span></li>
+            <li class="fragment"><strong>Persisted artifacts</strong> <span>- store requirements, plans, evidence in the repo.</span></li>
+            <li class="fragment"><strong>Proof over prose</strong> <span>- "done" means tests/checks + validation report.</span></li>
+            <li class="fragment"><strong>Tooling for truth</strong> <span>- prefer authoritative retrieval and runtime inspection.</span></li>
+            <li class="fragment"><strong>Safety constraints explicit</strong> <span>- define data/tool boundaries; stop on risk.</span></li>
+            <li class="fragment"><strong>Separation of concerns</strong> <span>- bounded roles/agents; avoid one agent doing everything.</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Quick "gatekeeper" drill</h3>
+          <div class="gate" id="gatekeeper">
+            <div class="scenario">
+              <strong>Scenario</strong>
+              <p class="muted" style="margin:8px 0 0">An engineer proposes: "The agent refactored checkout and made it faster. No tests were added, and the validation report is empty. The PR is 2,400 lines and touches 41 files."</p>
+            </div>
+            <div class="choices" role="group" aria-label="approve or reject">
+              <div class="choice" data-v="approve">Approve</div>
+              <div class="choice" data-v="reject">Reject</div>
+              <div class="choice" data-v="reveal" style="border-color:rgba(110,231,255,.25)">Reveal rationale</div>
+            </div>
+            <div class="reveal" id="gateReveal">
+              <strong>Recommended: Reject (for now)</strong>
+              <ul style="margin-top:10px">
+                <li>Violates small-batch rule: too big to review safely.</li>
+                <li>No proof: missing tests, checks, runtime validation, and a report.</li>
+                <li>Plan/gates not shown: unclear scope and risk.</li>
+              </ul>
+              <p class="muted" style="margin:10px 0 0">Next step: split into units, add a regression baseline, and re-run with evidence gates.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide" data-title="Artifacts + traceability">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Make work auditable</div>
+          <h2 class="title" style="font-size:44px">Artifacts are the "golden thread"</h2>
+          <p class="subtitle">Traceability keeps AI-generated work reviewable and prevents prompt-driven drift.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Shared language</h3>
+          <p class="quote" style="font-size:22px; margin:0"><strong>Intent - Units - Evidence</strong></p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Traceability chain</h3>
+          <div class="flow" style="gap:12px">
+            <div class="node fragment"><strong>Intent</strong><span>why are we doing this?</span></div>
+            <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="node fragment"><strong>Requirements</strong><span>what must be true?</span></div>
+            <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="node fragment"><strong>Units</strong><span>small, verifiable slices</span></div>
+            <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="node fragment"><strong>Code</strong><span>small diffs</span></div>
+            <div class="arrow fragment" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="node fragment"><strong>Evidence</strong><span>tests, checks, runtime</span></div>
+          </div>
+          <div style="height:14px"></div>
+          <div class="card tight fragment" style="background:rgba(110,231,255,.06); border-color:rgba(110,231,255,.18)">
+            <h3 style="margin:0 0 8px">Key idea</h3>
+            <p class="small" style="margin:0">Artifacts are durable context for humans and AI. Chat history is not an audit trail.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Minimal repo structure (example)</h3>
+          <pre class="fragment"><code>aisdlc-docs/
+  aisdlc-state.md
+  execution-plan.md
+  audit.md
+
+  inception/
+    intent.md
+    requirements.md
+    nfr.md
+    units/
+      unit-01.md
+
+  construction/
+    unit-01/
+      tasks-plan.md
+      design.md
+      validation-report.md
+
+  operations/
+    deployment-plan.md
+    runbooks.md
+    observability.md</code></pre>
+
+          <div style="height:12px"></div>
+          <div class="card tight fragment" style="background:rgba(0,0,0,.18)">
+            <h3 style="margin:0 0 8px">Validation report (what good looks like)</h3>
+            <pre><code>- Commands run: lint, unit tests, integration tests
+- Results: PASS (links/logs)
+- Coverage: what is and isn't validated
+- Risk notes: migrations, backward compatibility, rollout plan</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide" data-title="Construction loop + rails">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Execution</div>
+          <h2 class="title" style="font-size:44px">Per-unit loop: plan - build - prove</h2>
+          <p class="subtitle">AI accelerates execution. Rails prevent the bottleneck moving to review, CI, and production risk.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Presenter prompt</h3>
+          <p class="small" style="margin:0">Ask: "What would you need to see to merge an AI-generated PR with confidence?"</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>The loop (one unit)</h3>
+          <ul class="checklist">
+            <li class="fragment">AI drafts unit plan (checkbox tasks, risks, test strategy)</li>
+            <li class="fragment">Human approves plan (or refines scope)</li>
+            <li class="fragment">AI drafts design (APIs/data model/trade-offs)</li>
+            <li class="fragment">AI implements in small diffs</li>
+            <li class="fragment">AI runs verification (tests, lint, build, scans)</li>
+            <li class="fragment">AI writes validation report; human approves merge</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Rails (defaults)</h3>
+          <div class="grid3" style="grid-template-columns:1fr; gap:12px">
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">Small PR discipline</h3>
+              <p class="small" style="margin:0">Prefer one unit per PR. Avoid mixing refactors and features.</p>
+            </div>
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">Multi-stage review gates</h3>
+              <p class="small" style="margin:0">Static checks, security checks, integration/contract checks, complexity checks, then human approval.</p>
+            </div>
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">Receiver infrastructure</h3>
+              <p class="small" style="margin:0">Stronger tests, CI/CD, feature flags, and observability so higher velocity does not reduce quality.</p>
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="card tight fragment" style="border-color:rgba(251,191,36,.25); background:rgba(251,191,36,.07)">
+            <h3 style="margin:0 0 8px">Second-order effect</h3>
+            <p class="small" style="margin:0">If you do not raise verification, you will ship faster and fail faster. AI-SDLC is designed to prevent that.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide" data-title="Brownfield + frontend">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Variants</div>
+          <h2 class="title" style="font-size:44px">Brownfield: discovery is mandatory</h2>
+          <p class="subtitle">For existing systems, no coding until discovery is complete and approved. For frontend, runtime proof is mandatory.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Presenter tip</h3>
+          <p class="small" style="margin:0">Call out: most BU value is in brownfield, so this is where AI-SDLC either earns trust or fails.</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Discovery and analysis (before inception)</h3>
+          <ul>
+            <li class="fragment"><strong>Analysis plan</strong> <span>- what we will inspect and how.</span></li>
+            <li class="fragment"><strong>Current-state analysis</strong> <span>- architecture, dependencies, integrations, infra constraints.</span></li>
+            <li class="fragment"><strong>Regression baseline</strong> <span>- "must not break" behaviors.</span></li>
+            <li class="fragment"><strong>Change impact</strong> <span>- what modules, data, and contracts are touched.</span></li>
+            <li class="fragment"><strong>Semantic models (backend)</strong> <span>- static + dynamic models for key flows.</span></li>
+          </ul>
+          <div style="height:10px"></div>
+          <div class="pillrow fragment">
+            <div class="pill"><span class="dot" style="background:var(--warn)"></span> Gate: Discovery exit approved</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Frontend constraint: preserve working behavior</h3>
+          <ul>
+            <li class="fragment"><strong>"Do no harm"</strong> <span>- changes in behavior require explicit approval.</span></li>
+            <li class="fragment"><strong>Runtime validation</strong> <span>- real browser checks (and/or E2E) are mandatory.</span></li>
+            <li class="fragment"><strong>Evidence capture</strong> <span>- DevTools/network/perf proof where relevant.</span></li>
+          </ul>
+          <div style="height:12px"></div>
+          <div class="card tight fragment" style="border-color:rgba(110,231,255,.25); background:rgba(110,231,255,.08)">
+            <h3 style="margin:0 0 8px">Why this matters</h3>
+            <p class="small" style="margin:0">Brownfield mistakes are expensive. Discovery + baselines create the guardrails AI needs to be helpful instead of disruptive.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section class="slide" data-title="Adoption into BAU">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Adoption</div>
+          <h2 class="title" style="font-size:44px">Gym - scale - BAU</h2>
+          <p class="subtitle">Adoption is a cultural refactor. We start with practice on real work, then template it, then make it routine.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Audience callout</h3>
+          <p class="small" style="margin:0">Non-technical colleagues are critical: intent, constraints, acceptance criteria, and gatekeeping.</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>30/60/90 (suggested)</h3>
+          <div class="grid3" style="grid-template-columns:1fr; gap:12px">
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">0-30 days: pick a slice</h3>
+              <ul style="margin:0">
+                <li>Choose sponsor + technical owner.</li>
+                <li>Select one bounded backlog item (1-3 units).</li>
+                <li>Baseline lead time, defects, rework, review backlog.</li>
+              </ul>
+            </div>
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">30-60 days: run the Gym</h3>
+              <ul style="margin:0">
+                <li>Mob elaboration (intent - units - plan).</li>
+                <li>Mob construction (one unit end-to-end with proof).</li>
+                <li>Capture templates + guardrail backlog items.</li>
+              </ul>
+            </div>
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">60-90 days: make it routine</h3>
+              <ul style="margin:0">
+                <li>Standardize aisdlc-docs and approval gates.</li>
+                <li>Integrate review gates into CI/CD where possible.</li>
+                <li>Publish a "lighthouse" win and what you learned.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Roles (minimal set)</h3>
+          <ul>
+            <li class="fragment"><strong>Sponsor</strong> <span>- outcome target, trade-offs, unblock.</span></li>
+            <li class="fragment"><strong>Pod lead</strong> <span>- unit boundaries, acceptance criteria, execution plan.</span></li>
+            <li class="fragment"><strong>Engineer(s)</strong> <span>- operate agents, keep diffs small, keep artifacts coherent.</span></li>
+            <li class="fragment"><strong>QA / Ops / Security</strong> <span>- engage by risk, own verification and readiness evidence.</span></li>
+            <li class="fragment"><strong>AI workflow maintainer</strong> <span>- prompts, rails, CI gates as code.</span></li>
+          </ul>
+          <div style="height:10px"></div>
+          <div class="card tight fragment" style="background:rgba(167,139,250,.06); border-color:rgba(167,139,250,.18)">
+            <h3 style="margin:0 0 8px">Rituals (recommended)</h3>
+            <p class="small" style="margin:0">Mob elaboration (30-60m), bolt planning (15m), mob construction (60-120m), guardrail retro (15m).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section class="slide" data-title="Workshops + resources">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Enablement</div>
+          <h2 class="title" style="font-size:44px">What we provide to help you adopt</h2>
+          <p class="subtitle">A reusable kit plus guided practice. The goal is BAU adoption, not one-off demos.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Links (open in new tab)</h3>
+          <p class="small" style="margin:0 0 6px"><a href="https://ai-sdlc-explainer.vercel.app/" target="_blank" rel="noreferrer">AI-SDLC explainer site</a></p>
+          <p class="small" style="margin:0"><a href="https://github.com/MachineKomi/AI-SDLC_Explainer" target="_blank" rel="noreferrer">Explainer GitHub repo</a></p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Resources</h3>
+          <ul>
+            <li class="fragment"><strong>AI-SDLC Playbook v1.0</strong> <span>- lifecycle, non-negotiables, rails, adoption into BAU.</span></li>
+            <li class="fragment"><strong>Explainer web app</strong> <span>- onboarding, quiz, gatekeeper drills, project simulator.</span></li>
+            <li class="fragment"><strong>SharePoint resource folder</strong> <span>- prompt packs, method docs, and templates (AI at Vesta).</span></li>
+            <li class="fragment"><strong>Method docs</strong> <span>- best-practice principles and method definition.</span></li>
+            <li class="fragment"><strong>Prompt packs</strong> <span>- greenfield/brownfield, frontend/backend, plus system/agent prompt.</span></li>
+          </ul>
+          <div style="height:12px"></div>
+          <pre class="fragment"><code>aisdlc-docs/
+aisdlc-best-practice-method-principles.md
+aisdlc-method-definition.md
+aisdlc-docs/prompts/
+  sys-prompt-aisdlc-agent.md
+  brownfield-backend_v1.1.md
+  brownfield-frontend_v1.1.md
+  greenfield-backend_v1.1.md
+  greenfield-frontend_v1.1.md</code></pre>
+          <div style="height:12px"></div>
+          <div class="card tight fragment" style="background:rgba(0,0,0,.18)">
+            <h3 style="margin:0 0 8px">If you do one thing</h3>
+            <p class="small" style="margin:0">Run one real unit end-to-end with evidence, then template what worked.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Workshops (pattern)</h3>
+          <div class="grid3" style="grid-template-columns:1fr; gap:12px">
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">AI-SDLC Gym (Day 1)</h3>
+              <p class="small" style="margin:0">Mob elaboration on a BU backlog item. Outputs: intent, requirements, NFRs, units, execution plan, and gates.</p>
+            </div>
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">AI-SDLC Gym (Day 2)</h3>
+              <p class="small" style="margin:0">Mob construction: ship one narrow slice with proof, validation report, and review gates wired.</p>
+            </div>
+            <div class="card tight fragment">
+              <h3 style="margin:0 0 8px">Office hours and templates</h3>
+              <p class="small" style="margin:0">Coaching on first runs, prompt tuning, CI rails, and measurement. Publish "lighthouse" examples across BUs.</p>
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="card tight fragment" style="border-color:rgba(110,231,255,.22)">
+            <h3 style="margin:0 0 8px">Adoption ask to BUs</h3>
+            <p class="small" style="margin:0">Bring: a sponsor, a real backlog item, and willingness to run with small batches and proof.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section class="slide" data-title="Close">
+      <div class="topbar">
+        <div>
+          <div class="kicker"><span class="kdot"></span> Wrap</div>
+          <h2 class="title" style="font-size:44px">Takeaways</h2>
+          <p class="subtitle">Three things to remember and how to start this week.</p>
+        </div>
+        <div class="card tight" style="max-width:420px">
+          <h3 style="margin:0 0 8px">Q&amp;A prompt</h3>
+          <p class="small" style="margin:0">Ask: "What is the riskiest part of your SDLC today?" Then map it to a gate or artifact.</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>The three anchors</h3>
+          <ul>
+            <li class="fragment"><strong>Plan-first</strong> <span>- approval gates before meaningful execution.</span></li>
+            <li class="fragment"><strong>Small batches</strong> <span>- units that are independently verifiable and reviewable.</span></li>
+            <li class="fragment"><strong>Proof over prose</strong> <span>- validation reports with objective evidence.</span></li>
+          </ul>
+          <div style="height:12px"></div>
+          <div class="card tight fragment" style="background:rgba(52,211,153,.06); border-color:rgba(52,211,153,.18)">
+            <h3 style="margin:0 0 8px">Start this week</h3>
+            <ul style="margin:0">
+              <li>Pick one small unit with clear acceptance criteria.</li>
+              <li>Create aisdlc-docs and run the plan-approve-build-prove loop.</li>
+              <li>Share what broke and update the guardrails.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Speaker notes (local)</h3>
+          <p class="muted" style="margin:0 0 10px">Notes are stored in a separate markdown file. Open it after the session starts or on a second monitor.</p>
+          <div class="pillrow">
+            <a class="btn primary" id="notesBtn" href="speaker-notes.md" target="_blank" rel="noreferrer">Open speaker-notes.md</a>
+            <button class="btn" id="copyLinks">Copy key links</button>
+          </div>
+          <div style="height:12px"></div>
+          <div class="card tight" style="background:rgba(0,0,0,.18)">
+            <h3 style="margin:0 0 8px">Key links</h3>
+            <p class="small" style="margin:0" class="mono">Explainer: ai-sdlc-explainer.vercel.app</p>
+            <p class="small" style="margin:6px 0 0" class="mono">Repo: github.com/MachineKomi/AI-SDLC_Explainer</p>
+          </div>
+          <div style="height:8px"></div>
+          <p class="small muted" id="copyStatus" style="margin:0"></p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- HUD -->
+  <div class="hud hidden" id="hud">
+    <div class="panel">
+      <div>
+        <strong id="hudTitle">AI-SDLC</strong><br>
+        <span id="hudMeta">Slide 1</span>
+      </div>
+      <div style="width:10px"></div>
+      <div>
+        <strong id="hudTimer">00:00</strong><br>
+        <span>timer</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px">
+      <div class="tinybtn" id="hudReset">Reset timer</div>
+      <div class="tinybtn" id="hudHide">Hide (H)</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer" role="navigation" aria-label="presentation controls">
+    <div class="progressWrap">
+      <div class="kbd">Left/Right</div>
+      <div class="progressBar" aria-hidden="true"><div id="progress"></div></div>
+      <div class="slideCount" id="counter">1 / 13</div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="prevBtn" aria-label="previous">Prev</button>
+      <button class="btn primary" id="nextBtn" aria-label="next">Next</button>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const progressEl = document.getElementById('progress');
+      const counterEl = document.getElementById('counter');
+      const nextBtn = document.getElementById('nextBtn');
+      const prevBtn = document.getElementById('prevBtn');
+
+      const hud = document.getElementById('hud');
+      const hudTitle = document.getElementById('hudTitle');
+      const hudMeta = document.getElementById('hudMeta');
+      const hudTimer = document.getElementById('hudTimer');
+      const hudReset = document.getElementById('hudReset');
+      const hudHide = document.getElementById('hudHide');
+
+      let idx = 0;
+      const shownBySlide = slides.map(() => 0);
+      let timerStart = null;
+      let timerRAF = null;
+
+      function fmtTime(ms){
+        const s = Math.max(0, Math.floor(ms/1000));
+        const mm = String(Math.floor(s/60)).padStart(2,'0');
+        const ss = String(s%60).padStart(2,'0');
+        return `${mm}:${ss}`;
+      }
+      function tick(){
+        if(timerStart==null) return;
+        const now = performance.now();
+        hudTimer.textContent = fmtTime(now - timerStart);
+        timerRAF = requestAnimationFrame(tick);
+      }
+      function ensureTimer(){
+        if(timerStart==null){
+          timerStart = performance.now();
+          if(timerRAF) cancelAnimationFrame(timerRAF);
+          timerRAF = requestAnimationFrame(tick);
+        }
+      }
+      function resetTimer(){
+        timerStart = performance.now();
+      }
+
+      function currentSlide(){ return slides[idx]; }
+
+      function fragments(slide){
+        return Array.from(slide.querySelectorAll('.fragment'));
+      }
+
+      function applyFragments(slide){
+        const frags = fragments(slide);
+        frags.forEach((f,i)=>{
+          if(i < shownBySlide[idx]) f.classList.add('shown');
+          else f.classList.remove('shown');
+        });
+      }
+
+      function revealNextFragment(){
+        const slide = currentSlide();
+        const frags = fragments(slide);
+        if(shownBySlide[idx] < frags.length){
+          frags[shownBySlide[idx]].classList.add('shown');
+          shownBySlide[idx] += 1;
+          return true;
+        }
+        return false;
+      }
+      function hidePrevFragment(){
+        const slide = currentSlide();
+        const frags = fragments(slide);
+        if(shownBySlide[idx] > 0){
+          shownBySlide[idx] -= 1;
+          frags[shownBySlide[idx]].classList.remove('shown');
+          return true;
+        }
+        return false;
+      }
+
+      function updateUI(){
+        const pct = (slides.length<=1) ? 1 : (idx/(slides.length-1));
+        progressEl.style.width = `${Math.round(pct*100)}%`;
+        counterEl.textContent = `${idx+1} / ${slides.length}`;
+        const title = currentSlide().dataset.title || `Slide ${idx+1}`;
+        hudTitle.textContent = title;
+        hudMeta.textContent = `Slide ${idx+1} / ${slides.length}  |  Fragments ${shownBySlide[idx]} / ${fragments(currentSlide()).length}`;
+      }
+
+      function showSlide(newIdx, dir){
+        if(newIdx < 0 || newIdx >= slides.length || newIdx === idx) return;
+        ensureTimer();
+
+        const old = slides[idx];
+        const next = slides[newIdx];
+
+        old.classList.remove('active');
+        old.classList.remove('to-left','to-right');
+        next.classList.remove('to-left','to-right');
+        next.classList.add('active');
+
+        // Animate old out
+        requestAnimationFrame(()=>{
+          old.classList.add(dir === 'forward' ? 'to-left' : 'to-right');
+        });
+
+        idx = newIdx;
+        applyFragments(currentSlide());
+        updateUI();
+      }
+
+      function next(){
+        if(revealNextFragment()) { updateUI(); return; }
+        showSlide(idx+1, 'forward');
+      }
+
+      function prev(){
+        if(hidePrevFragment()) { updateUI(); return; }
+        showSlide(idx-1, 'back');
+      }
+
+      nextBtn.addEventListener('click', next);
+      prevBtn.addEventListener('click', prev);
+
+      document.addEventListener('keydown', (e)=>{
+        const key = e.key;
+        if(['ArrowRight','PageDown',' '].includes(key)) { e.preventDefault(); next(); }
+        if(['ArrowLeft','PageUp'].includes(key)) { e.preventDefault(); prev(); }
+        if(key === 'Home') { e.preventDefault(); showSlide(0,'back'); }
+        if(key === 'End') { e.preventDefault(); showSlide(slides.length-1,'forward'); }
+        if(key.toLowerCase() === 'h') {
+          e.preventDefault(); hud.classList.toggle('hidden');
+          ensureTimer();
+        }
+        if(key.toLowerCase() === 'r') {
+          e.preventDefault(); resetTimer();
+        }
+      });
+
+      hudReset.addEventListener('click', ()=>{ensureTimer(); resetTimer();});
+      hudHide.addEventListener('click', ()=>hud.classList.add('hidden'));
+
+      // Stepper
+      document.querySelectorAll('[data-stepper]').forEach((root)=>{
+        const steps = Array.from(root.querySelectorAll('.step'));
+        const details = Array.from(root.querySelectorAll('[data-step-detail]'));
+        function setActive(name){
+          steps.forEach(s=>s.classList.toggle('active', s.dataset.step === name));
+          details.forEach(d=>d.classList.toggle('active', d.dataset.stepDetail === name));
+        }
+        steps.forEach(s=>s.addEventListener('click', ()=>setActive(s.dataset.step)));
+      });
+
+      // Entropy grid
+      const entropyDetail = document.getElementById('entropyDetail');
+      const entropyText = document.getElementById('entropyText');
+      const examples = {
+        listeners: 'Hidden cost: each instance adds a listener, so 100 popups means 100 callbacks per click. Review often sees clean abstraction, not global cost.',
+        cache: 'Silent failure: object identity changes every call, so the cache key never matches. Nothing crashes, it just stops helping.',
+        async: 'Latency regression: one await can serialize work. The problem is hard to see when logic is spread across a large function.',
+        opt: 'Negative optimization: added memoization overhead exceeds the cost of recomputing. Proof requires profiling or benchmarks.'
+      };
+      const grid = document.getElementById('entropyGrid');
+      if(grid){
+        grid.addEventListener('click', (e)=>{
+          const el = e.target.closest('.thumb');
+          if(!el) return;
+          const key = el.dataset.example;
+          Array.from(grid.querySelectorAll('.thumb')).forEach(t=>t.style.outline='none');
+          el.style.outline = '2px solid rgba(110,231,255,.35)';
+          entropyText.textContent = examples[key] || 'Select an example.';
+          entropyDetail.style.borderColor = 'rgba(110,231,255,.35)';
+        });
+      }
+
+      // Gatekeeper
+      const gate = document.getElementById('gatekeeper');
+      const gateReveal = document.getElementById('gateReveal');
+      if(gate){
+        gate.addEventListener('click', (e)=>{
+          const ch = e.target.closest('.choice');
+          if(!ch) return;
+          if(ch.dataset.v === 'reveal') {
+            gateReveal.classList.add('show');
+            return;
+          }
+          Array.from(gate.querySelectorAll('.choice')).forEach(c=>c.classList.remove('active'));
+          ch.classList.add('active');
+        });
+      }
+
+      // Copy links
+      const copyBtn = document.getElementById('copyLinks');
+      const copyStatus = document.getElementById('copyStatus');
+      if(copyBtn){
+        copyBtn.addEventListener('click', async ()=>{
+          const txt = [
+            'AI-SDLC explainer: https://ai-sdlc-explainer.vercel.app/',
+            'Explainer repo: https://github.com/MachineKomi/AI-SDLC_Explainer'
+          ].join('\n');
+          try{
+            await navigator.clipboard.writeText(txt);
+            copyStatus.textContent = 'Copied to clipboard.';
+          }catch{
+            copyStatus.textContent = 'Could not copy (browser permissions).';
+          }
+          setTimeout(()=>{ copyStatus.textContent = ''; }, 2200);
+        });
+      }
+
+      // Init
+      applyFragments(currentSlide());
+      updateUI();
+    })();
+  </script>
+</body>
+</html>
