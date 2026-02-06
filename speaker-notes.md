@@ -1,4 +1,4 @@
-# Speaker Notes: AI-SDLC Webinar
+# Speaker Notes: AI-SDLC Webinar (v6)
 
 **Setup:**
 - Open the presentation in your browser (`index.html`).
@@ -12,132 +12,137 @@
 **"From Demos to Delivery"**
 
 *   **The Hook:** We've all seen the magic. You type a prompt, you get code. It feels like a superpower.
-*   **The Problem:** But magic doesn't scale. Magic is unpredictable. If we want to run a business on this, we don't need magic—we need a machine.
-*   **The Goal:** Today is about building that machine. How do we ship AI-assisted work **safely**, **consistently**, and at **scale**?
+*   **The Key Message:** But magic doesn't scale. Magic is unpredictable. If we want to run a business on this, we need a machine.
+*   **Include Legacy:** Note the subtitle now emphasizes "including on legacy systems" — this is a headline message, not a footnote.
 *   **The Three Pillars:**
-    1.  **Speed**: We want small batches and fast cycles.
-    2.  **Safety**: We need explicit approval gates.
-    3.  **Proof**: We need durable artifacts, not just code.
+    1.  **Speed**: Small batches, fast cycles.
+    2.  **Safety**: Explicit approval gates.
+    3.  **Proof**: Durable, verifiable artifacts.
 
 ---
 
 ## Slide 2: Context
 **"The Landscape Has Shifted"**
 
-*   **Capability:** It's not just "autocomplete" anymore. The new models (Claude 3.5, o1) can reason about architecture. They can refactor across files. They act more like junior architects than typing assistants.
-*   **Pressure:** The market is moving. AI-First teams are shipping 30-50% faster. Speed isn't a "nice to have" anymore—it's the currency of the new market.
-*   **The Trap (Risk):** But there's a trap. We call it "The Slop Trap." Generating code is easy. Verifying it is hard.
-*   **The Shift:** The bottleneck in software delivery has moved. It used to be **writing** code. Now, it is **reviewing** code. If we don't change how we work, we'll just drown in unverified code.
+*   **Capability:** It's not "autocomplete" anymore. Models reason about architecture, refactor across files, understand intent.
+*   **Pressure:** AI-First teams ship 30-50% faster. Speed is the currency of this market.
+*   **The Trap (Risk):** "The Slop Trap" — generating code is easy; verifying it is hard. The bottleneck has moved to review.
 
 ---
 
 ## Slide 3: Reality
 **"Knowledge is Locked in Heads"**
 
-*   **The "Bob" Problem:** Look at the left side. This is most organizations. Knowledge lives in Bob's head. When Bob is busy (or on holiday), delivery stops.
-*   **The AI Problem:** If you point an AI agent at this reality, it fails. It hallucinates because it doesn't know what Bob knows.
-*   **The Solution (Right Side):** We need **Shared Context**.
-*   **The Mechanic:** We have to move knowledge out of heads and into artifacts—docs, specs, rules. When we do that, the AI can read it. And suddenly, the "bus factor" isn't a crisis.
+*   **The "Bob" Problem:** Most orgs don't have docs. They have "Bob." When Bob is busy, delivery stops.
+*   **The AI Unlock:** When knowledge is captured as artifacts, AI becomes a force multiplier — not a replacement.
+*   **Interactive Prompt:** "Where does knowledge live today when someone is out?"
 
 ---
 
 ## Slide 4: Two Modes
 **"Prototype vs. Production"**
 
-*   **Concept:** We need to be honest about what mode we are in.
-*   **Prototype Mode (Left):** "Try things. Break things." This is great for learning. It's high risk, high speed. Use this for demos, for exploration.
-*   **Production Mode (Right):** "Prove it works." This is for shipping.
-*   **The Key:** You cannot "vibe code" your way into production. Production requires a different discipline: Plan first, stage-by-stage, with evidence.
-*   **Transition:** Today, we are focusing on the Right side—how to govern Production Mode.
+*   **This is the bridge** from prior "vibe coding" sessions to real delivery.
+*   **Prototype Mode (Left):** "Try things. Break things." Great for learning. High risk, high speed. Not safe for production data.
+*   **Production Mode (Right):** "Prove it works." Plan-first, step-by-step, small batches, explicit approval. "Done" = evidence, not vibes.
+*   **Interactive Prompt:** "What makes a prototype unsafe to ship to production?"
 
 ---
 
-## Slide 5: The Method
+## Slide 5: Legacy
+**"Yes, It Helps on Older Stacks"**
+
+*   **This is a headline message.** Don't self-disqualify because your tech is old.
+*   **Honest Caveat:** Models are weaker on rare/old languages with less public training data.
+*   **Practical Mitigation:**
+    1.  Put docs, runbooks, comments in-repo.
+    2.  Use retrieval-first (AI reads your docs).
+    3.  Add tests, iterate with verifiable checks.
+*   **The Visual:** The code block shows an AI agent reading context files and flagging a legacy dependency.
+
+---
+
+## Slide 6: Method
 **"Plan. Approve. Build. Prove."**
 
-*   **The Loop:** This is the core engine of AI-SDLC. It's a loop we run for every unit of work.
-*   1. **Plan:** AI proposes a plan. "Vague inputs = bad outputs," so we force clarity here.
-*   2. **Gate (Approve):** Human accountability. You approve the plan *before* code is written. Catch drift early.
-*   3. **Build:** AI executes.
-*   4. **Prove:** This is the most important step. "It runs on my machine" is not enough. We need evidence.
+*   **The Core Loop:** This is the engine we run for every unit of work.
+    1.  **Plan:** AI proposes. Vague inputs = bad outputs.
+    2.  **Approve:** Human accountability. Catch drift before code is written.
+    3.  **Build:** AI executes.
+    4.  **Prove:** Evidence over vibes. Tests passing, checks green, behaviour validated.
 
 ---
 
-## Slide 6: Evidence
+## Slide 7: Evidence
 **"Proof Over Promises"**
 
 *   **The Question:** What does "Done" look like?
 *   **Old Answer:** A thumbs up in a PR.
-*   **New Answer:** A **Validation Report**.
-*   **The Standard:** A unit is only done when:
-    *   Tests pass (Green).
-    *   Security scans are clean.
-    *   The build succeeds.
-    *   **And we have a document proving it.**
-*   **Why:** This creates an audit trail. It turns "trust me" into "show me."
+*   **New Answer:** A Validation Report. Tests passed, security scan clean, build succeeded, artifact documented.
+*   **The Evidence Rule:** A unit is done only when acceptance criteria pass, tests are green, and the validation report documents the proof.
+*   **Interactive Prompt:** "What evidence would you need to trust an AI-generated change?"
 
 ---
 
-## Slide 7: Collaborative Operating Model
-**"Working Together"**
+## Slide 8: Collaboration
+**"Compress Weeks into Hours"**
 
-*   **The Shift:** We're moving from "handoffs" to "collaboration."
-*   **Phase 1: Joint Design:**
-    *   Product, Tech, and QA sit together (Mob session).
-    *   We align on **Intent** before a single line of code is generated.
-*   **Phase 2: Joint Review:**
-    *   When the AI builds, we review together.
-    *   Dev reviews logic. AI generates tests. Rules govern the quality.
-*   **Impact:** We compress weeks of "email tag" and Jira comments into a single high-bandwidth session.
-
----
-
-## Slide 8: Legacy
-**"Modernizing Context, Not Just Code"**
-
-*   **The Fear:** "This is great for new apps, but I have a 20-year-old monolith."
-*   **The Reality:** AI is actually *better* at legacy than humans are, **if** you give it context.
-*   **The Technique:** We call it "Context Injection."
-*   **Visual:** Look at the code block. The Agent reads `risk-rules.md`. It spots that the code relies on an old tax table. It flags it.
-*   **Takeaway:** You don't have to rewrite the whole system. You just have to document the *understanding* of it. A semantically dense README is the highest-ROI thing you can write today.
+*   **Phase 1 — Joint Design (Alignment):**
+    *   Product defines value and priority.
+    *   Tech sets constraints and feasibility.
+    *   QA defines success criteria early.
+*   **Phase 2 — Joint Review (Evaluation):**
+    *   Dev reviews logic and edge cases.
+    *   AI generates code and tests.
+    *   Ops validates operational readiness.
 
 ---
 
 ## Slide 9: Roles
-**"Everyone Plays a Part"**
+**"Everyone Contributes"**
 
-*   **Accountability:** AI does not own the outcome. **Humans own the loss function.**
-*   **Product:** Your job is **Intent**. Be clear about what we are building.
-*   **QA:** Your job is **Proof**. Define the tests that prove it works.
-*   **Ops:** Your job is **Rails**. Set the safety boundaries.
-*   **Everyone:** Your job is to **Capture Knowledge**. Stop keeping it in your head. Write it down.
+*   **Accountability:** AI does not own the outcome. Humans own the loss function.
+*   **Product / PM / BA:** Intent, acceptance criteria, edge cases, trade-off decisions.
+*   **QA:** Test intent early, define evidence, add checks from day 1.
+*   **Ops / ProServ:** Operational constraints, supportability, runbooks, rollout.
+*   **Everyone:** Capture knowledge. Document decisions. Share what you know.
 
 ---
 
 ## Slide 10: Adoption
 **"Start Small. Prove Value. Scale."**
 
-*   **How to Start:** Do not try to change everything overnight.
-*   **Step 1: Pick One Thing.** A single feature. A single bug fix. Keep it small.
-*   **Step 2: Run with Evidence.** Force the "Proving" step. Do not shortcut the validation report.
-*   **Step 3: Share the Win.** Don't just show the demo. Show the *report*. Show the *process*. That is how you build trust.
+*   **Step 1:** Pick one thing. Small, bounded, clear acceptance criteria.
+*   **Step 2:** Run with evidence. Force the "Proving" step. No shortcuts.
+*   **Step 3:** Capture knowledge. Use the tools to document what the experts know.
+*   **The Goal:** Reduce knowledge bottlenecks, speed onboarding, reduce risk — not replace experienced people.
 
 ---
 
 ## Slide 11: Discussion
 **"Let's Discuss"**
 
-*   *facilitator note: Open the floor for these questions.*
-*   "Where does knowledge live today?" (Is it Bob?)
-*   "What makes a prototype unsafe?" (Lack of tests? Security?)
-*   "One legacy area to document?" (Where is the biggest risk?)
+*   Four key questions embedded:
+    1.  "Where does knowledge live today?"
+    2.  "What makes a prototype unsafe?"
+    3.  "What evidence would you need to trust AI output?"
+    4.  "One legacy area you wish was documented better?"
 
 ---
 
-## Slide 12: End
+## Slide 12: Takeaways
 **"It's Time to Build."**
 
-*   **The Quote:** Marc Andreessen said it best.
-*   **The Mandate:** It's not enough to talk about AI. It's time to build the machine that delivers it.
-*   **Call to Action:** Start this week. Pick one item. Run the loop. Share the proof.
-*   **Closing:** Thank you. Let's get to work.
+*   **Three Anchors:**
+    1.  Plan First — No vibe coding to production.
+    2.  Small Batches — Reviewable, reversible.
+    3.  Proof over Promises — Evidence, not vibes.
+*   **The Quote:** "It's time to build." — Marc Andreessen
+*   **Call to Action:** Start this week. Pick one small item. Run the loop. Share the proof.
+*   **Note:** A deeper technical workshop is available for developers who want the full detail.
+
+---
+
+## Key Links
+- AI-SDLC Explainer: https://ai-sdlc-explainer.vercel.app/
+- GitHub Repo: https://github.com/MachineKomi/AI-SDLC_Explainer
